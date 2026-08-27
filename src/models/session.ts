@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const sessionSchema = new mongoose.Schema({
     bookingDate: {
         type: Date,
         required: [true, "You must provide a valid booking date"],
-        min: [new Date.setHours(0,0,0,0), 'Booking date cannot be in the past']
+        min: 0
     },
     timeSlot: {
         type: String,
@@ -21,4 +21,4 @@ const sessionSchema = new mongoose.Schema({
 
 const Session = mongoose.model("Session", sessionSchema);
 
-exports.Session = Session;
+export default Session;
