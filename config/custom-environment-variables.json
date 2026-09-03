@@ -1,0 +1,4 @@
+{
+    "name": "Session-Booker_V1",
+    "jwtPrivateKey": "session_booker_jwtPrivateKey"
+}
