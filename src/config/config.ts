@@ -3,7 +3,13 @@ import config from "config";
 /// TODO: Validate all config variables.
 
 export default function() {
-    if(!config.get("jwtPrivateKey")) {
-        throw new Error("FATAL ERROR... jwtPrivateKey not set")
+    try{
+        const value = config.get("jwtPrivateKey");
+        if(!value) {
+            throw new Error("jwt PK cannot be empty string");
+        } 
+    } catch( err ) {
+        const reason = err instanceof Error ? err.message : 'unknown error';
+        throw new Error(`FATAL ERROR: invalid config - ${reason}`)
     }
 }
