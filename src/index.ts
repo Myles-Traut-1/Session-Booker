@@ -12,7 +12,7 @@ import auth from "../src/routes/auth";
 const app = express();
 
 /** -------- MIDDLEWARES -------- */
-app.use(express.json);
+app.use(express.json());
 
 /** -------- ROUTES -------- */
 app.use("/api/auth", auth);

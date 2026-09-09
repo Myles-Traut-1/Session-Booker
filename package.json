@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
     "start": "node dist/index.js",
     "test": "npm run typecheck && jest --watchAll --verbose --runInBand --coverage",
     "test:ci": "npm run typecheck && jest --runInBand --coverage",
-    "typecheck": "tsc --noEmit",
     "prepare": "husky"
   },
   "keywords": [],
@@ -22,7 +22,8 @@
     "joi": "^18.2.4",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.5.0",
-    "mongoose": "^9.9.3"
+    "mongoose": "^9.9.3",
+    "typescipt": "^1.0.0"
   },
   "devDependencies": {
     "@swc/core": "^1.16.1",
@@ -32,9 +33,11 @@
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.3.0",
+    "@types/supertest": "^7.2.1",
     "husky": "^9.1.7",
     "jest": "^30.4.2",
     "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   }
