@@ -5,10 +5,20 @@ import validateConfig from "./config/config";
 
 import { type Server } from "node:http";
 
+/** -------- ROUTE IMPORTS -------- */
+
+import auth from "../src/routes/auth";
+
 const app = express();
 
-app.get('/', (req, res) => {
-    res.send("Hello World");
+/** -------- MIDDLEWARES -------- */
+app.use(express.json);
+
+/** -------- ROUTES -------- */
+app.use("/api/auth", auth);
+
+app.get('/health', (req, res) => {
+    res.send("okay");
 });
 
 export async function startServer(): Promise<Server> {
