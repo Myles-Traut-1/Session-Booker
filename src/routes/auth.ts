@@ -1,21 +1,20 @@
 import express, { type Request, type Response, type Router } from "express";
-import mongoose from "mongoose";
-import {  type IUser, User, UserRole } from "../models/users";
+import {  type IUser, User } from "../models/users";
+import { type IRequestInput } from "../types/types";
 import bcrypt from "bcrypt";
 import Joi from 'joi';
-
 
 const router: Router = express.Router();
 
 router.post("/register", async (req: Request, res: Response) => {
-    let user: IUser | null = await User.findOne({email: req.body.email});
-    if(user) {
-        return res.status(400).send("User already registered");
-    }
-
     const { error } = validateUser(req.body);
     if(error) {
-        return res.status(400).send("Bad Request");
+        return res.status(400).json({error: "Bad Request"});
+    }
+
+    let user: IUser | null = await User.findOne({email: req.body.email});
+    if(user) {
+        return res.status(400).json({error: "User already registered"});
     }
 
     const salt: string = await bcrypt.genSalt(10);
@@ -25,20 +24,18 @@ router.post("/register", async (req: Request, res: Response) => {
         name: req.body.name,
         email: req.body.email,
         passwordHash: hashedPassword,
-        role: "student",
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+        role: "student"
     });
 
     const token = await user.generateAuthToken();
 
-    res.header("x-auth-token", token).send({name: user.name, email: user.email});
+    res.header("x-auth-token", token).json({name: user.name, email: user.email});
 
 });
 
 export default router;
 
-const validateUser = (user: IUser) => {
+const validateUser = (user: IRequestInput) => {
     const schema = Joi.object({
         name: Joi.string().required().min(3).max(255),
         email: Joi.string().required().min(3).max(255).email(),
