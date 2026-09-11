@@ -1,4 +1,6 @@
 import { connectToDb, disconnectFromDb, clearDatabase } from "../../test-utils/mongo-testSetup"
+import mongoose from "mongoose";
+import { app } from "../../../index";
 
 import request from "supertest";
 import bcrypt from "bcrypt";
@@ -6,8 +8,6 @@ import bcrypt from "bcrypt";
 import { User, type IUser } from "../../../models/users";
 import { type Response } from "superagent";
 import { type IRequestInput } from "../../../types/types";
-
-import { app } from "../../../index";
 
 describe("api/auth/", () => {
     beforeAll(async () => {
@@ -45,7 +45,7 @@ describe("api/auth/", () => {
 
             const res: Response = await executeRequest();
             expect(res.status).toBe(400);
-            expect(res.text).toMatch(/Bad request/i);
+            expect(res.text).toMatch(/is not allowed to be empty/i);
         });
         it("should return 400 status if user already registered", async () => {
             let res: Response = await executeRequest();
@@ -75,5 +75,74 @@ describe("api/auth/", () => {
         });
     });
 
+    describe("POST/ login", () => {
+        let user: IUser;
+        let userId: mongoose.Types.ObjectId;
+        let username: string;
+        let userEmail: string;
+        let userPassword: string;
+        let hashedPassword: string;
+        let salt: string;
 
+        const executeRequest = () => {
+            return request(app).post("/api/auth/login").send({
+                email: userEmail,
+                password: userPassword
+            });
+        }
+
+        beforeEach(async () => {
+            userId = new mongoose.Types.ObjectId();
+            username = "Myles";
+            userEmail = "testmail@testemail.com";
+            userPassword = "123456";
+
+            salt = await bcrypt.genSalt(10);
+            hashedPassword = await bcrypt.hash(userPassword, salt);
+
+            user = await User.create({
+                _id: userId,
+                name: username,
+                email:userEmail,
+                passwordHash: hashedPassword
+            });
+        });
+
+        it("should return 200 status for successful request", async() => {
+            const res = await executeRequest();
+
+            expect(res.status).toBe(200);
+        });
+        it("should return 400 status for bad request", async() => {
+            userEmail = "";
+            const res = await executeRequest();
+            
+            expect(res.status).toBe(400);
+            expect(res.text).toMatch(/is not allowed to be empty/i);
+        });
+        it("should return 400 status and generic error for incorrect eamil or password", async() => {
+            userEmail = "1234@mail.com";
+            let res = await executeRequest();
+            
+            expect(res.status).toBe(400);
+            expect(res.text).toMatch(/Invalid email or password/i);
+
+            userEmail = "testmail@testemail.com";
+            userPassword = "654321";
+
+            res = await executeRequest();
+            expect(res.status).toBe(400);
+            expect(res.text).toMatch(/Invalid email or password/i);
+        });
+        it("should set the token in the request header", async () => {
+            const res = await executeRequest();
+
+            expect(res.header["x-auth-token"]).not.toBeNull();
+        });
+        it("should return the email to the client", async() => {
+            const res = await executeRequest();
+
+            expect(res.body).toHaveProperty("email", userEmail);
+        });
+    });
 });

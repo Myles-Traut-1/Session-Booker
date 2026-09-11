@@ -1,15 +1,17 @@
 import express, { type Request, type Response, type Router } from "express";
 import {  type IUser, User } from "../models/users";
-import { type IRequestInput } from "../types/types";
+import { type IRequestInput, type ILoginInput } from "../types/types";
 import bcrypt from "bcrypt";
 import Joi from 'joi';
 
 const router: Router = express.Router();
 
+/** ------- POST ------*/
+
 router.post("/register", async (req: Request, res: Response) => {
     const { error } = validateUser(req.body);
     if(error) {
-        return res.status(400).json({error: "Bad Request"});
+        return res.status(400).json({error: error.details[0].message});
     }
 
     let user: IUser | null = await User.findOne({email: req.body.email});
@@ -33,6 +35,27 @@ router.post("/register", async (req: Request, res: Response) => {
 
 });
 
+router.post("/login", async(req: Request, res: Response) => {
+    const { error } = validateLogin(req.body);
+    if(error) {
+        return res.status(400).json({error: error.details[0].message});
+    }
+
+    let user: IUser | null = await User.findOne({email: req.body.email});
+    if(!user) {
+        return res.status(400).json({error: "Invalid email or password"});
+    }
+
+    const validPassword: boolean = await bcrypt.compare(req.body.password, user.passwordHash);
+    if(!validPassword) {
+        return res.status(400).json({error: "Invalid email or password"});
+    }
+
+    const token = await user.generateAuthToken();
+
+    res.header("x-auth-token", token).json({email: user.email});
+});
+
 export default router;
 
 const validateUser = (user: IRequestInput) => {
@@ -43,4 +66,13 @@ const validateUser = (user: IRequestInput) => {
     });
 
     return schema.validate(user);
+}
+
+const validateLogin = (login: ILoginInput) => {
+    const schema = Joi.object({
+        email: Joi.string().required().min(3).max(255).email(),
+        password: Joi.string().required().min(6)
+    });
+
+    return schema.validate(login);
 }
