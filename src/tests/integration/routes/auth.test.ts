@@ -20,6 +20,22 @@ describe("api/auth/", () => {
         await disconnectFromDb();
     });
 
+    describe("GET/ me", () => {
+        let token: string;
+        beforeEach(async () => {
+            token = new User().generateAuthToken();
+        });
+
+        const executeRequest = () => {
+            return request(app).get("/api/auth/me").set("x-auth-token", token);
+        }
+
+        it("Should return decoded", async() => {
+            const res = await executeRequest();
+            console.log(res.body, res.status);
+        })
+    });
+
     describe("POST/ register",() => {
         let payload: IRequestInput;
 
