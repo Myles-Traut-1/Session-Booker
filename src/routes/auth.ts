@@ -11,16 +11,11 @@ const router: Router = express.Router();
 /** ------- GET ------ */
 
 router.get("/me", auth, async (req: Request, res: Response) => {
-    try{
         const id = (req.user as AuthResponse)._id;
 
         const user = await User.findById(id).select("-passwordHash");
 
         res.send(user);
-
-    } catch(err) {
-        return res.status(500).json({error: "db error"});
-    }
 });
 
 /** ------- POST ------ */

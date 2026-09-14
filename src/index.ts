@@ -5,6 +5,10 @@ import validateConfig from "./config/config";
 
 import { type Server } from "node:http";
 
+/** ------- MIDDLEWARE IMPORTS -------- */
+
+import error from "../src/middleware/error";
+
 /** -------- ROUTE IMPORTS -------- */
 
 import auth from "../src/routes/auth";
@@ -20,6 +24,11 @@ app.use("/api/auth", auth);
 app.get('/health', (req, res) => {
     res.send("okay");
 });
+
+/** -------- ERROR MIDDLWARE -------- */
+app.use(error);
+
+/** -------- STARTUP -------- */
 
 export async function startServer(): Promise<Server> {
     validateConfig();
