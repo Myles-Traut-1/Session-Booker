@@ -20,10 +20,6 @@ router.get("/me", async (req: Request, res: Response) => {
     try{
         const decoded = jwt.verify(token, config.get("jwtPrivateKey")) as AuthResponse;
 
-        if(!decoded) {
-            return res.status(400).json({error: "No user"});
-        }
-
         const id = decoded._id;
 
         const user = await User.findById(id).select("-passwordHash");

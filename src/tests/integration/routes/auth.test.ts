@@ -20,20 +20,62 @@ describe("api/auth/", () => {
         await disconnectFromDb();
     });
 
+    let user: IUser;
+    let userId: mongoose.Types.ObjectId;
+    let username: string;
+    let userEmail: string;
+    let userPassword: string;
+    let hashedPassword: string;
+    let salt: string;
+    let token: string;
+
+    async function registerUser() {
+        userId = new mongoose.Types.ObjectId();
+        username = "Myles";
+        userEmail = "testmail@testemail.com";
+        userPassword = "123456";
+
+        salt = await bcrypt.genSalt(10);
+        hashedPassword = await bcrypt.hash(userPassword, salt);
+
+        user = await User.create({
+            _id: userId,
+            name: username,
+            email:userEmail,
+            passwordHash: hashedPassword
+        });
+
+        token = user.generateAuthToken();
+    };
+
     describe("GET/ me", () => {
-        let token: string;
-        beforeEach(async () => {
-            token = new User().generateAuthToken();
+        beforeEach(async() => {
+            await registerUser();
         });
 
         const executeRequest = () => {
             return request(app).get("/api/auth/me").set("x-auth-token", token);
         }
 
-        it("Should return decoded", async() => {
+        it("Should return 200 status on successful request", async() => {
             const res = await executeRequest();
-            console.log(res.body, res.status);
-        })
+            expect(res.status).toBe(200);
+        });
+        it("Should return 401 status if no token provided", async() => {
+            token = "";
+            const res = await executeRequest();
+
+            expect(res.status).toBe(401);
+            expect(res.text).toMatch(/No token provided/i);
+        });
+        it("should return the user to the client", async() => {
+            const res = await executeRequest();
+
+            expect(res.body).toHaveProperty("name", username);
+            expect(res.body).toHaveProperty("email", userEmail);
+            expect(res.body).toHaveProperty("role", "student");
+            expect(res.body).not.toHaveProperty("passwordHash");
+        });
     });
 
     describe("POST/ register",() => {
@@ -92,37 +134,16 @@ describe("api/auth/", () => {
     });
 
     describe("POST/ login", () => {
-        let user: IUser;
-        let userId: mongoose.Types.ObjectId;
-        let username: string;
-        let userEmail: string;
-        let userPassword: string;
-        let hashedPassword: string;
-        let salt: string;
-
+        beforeEach(async() => {
+            await registerUser();
+        });
+        
         const executeRequest = () => {
             return request(app).post("/api/auth/login").send({
                 email: userEmail,
                 password: userPassword
             });
         }
-
-        beforeEach(async () => {
-            userId = new mongoose.Types.ObjectId();
-            username = "Myles";
-            userEmail = "testmail@testemail.com";
-            userPassword = "123456";
-
-            salt = await bcrypt.genSalt(10);
-            hashedPassword = await bcrypt.hash(userPassword, salt);
-
-            user = await User.create({
-                _id: userId,
-                name: username,
-                email:userEmail,
-                passwordHash: hashedPassword
-            });
-        });
 
         it("should return 200 status for successful request", async() => {
             const res = await executeRequest();
