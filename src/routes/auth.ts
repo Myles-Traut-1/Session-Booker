@@ -2,25 +2,17 @@ import express, { type Request, type Response, type Router } from "express";
 import { AuthResponse } from "../types"
 import {  type IUser, User } from "../models/users";
 import { type IRequestInput, type ILoginInput } from "../types/types";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Joi from 'joi';
-import config from "config";
+import auth from "../middleware/auth";
 
 const router: Router = express.Router();
 
 /** ------- GET ------ */
 
-router.get("/me", async (req: Request, res: Response) => {
-    const token = req.header("x-auth-token");
-    if(!token) {
-        return res.status(401).json({error: "No token provided"});
-    }
-
+router.get("/me", auth, async (req: Request, res: Response) => {
     try{
-        const decoded = jwt.verify(token, config.get("jwtPrivateKey")) as AuthResponse;
-
-        const id = decoded._id;
+        const id = (req.user as AuthResponse)._id;
 
         const user = await User.findById(id).select("-passwordHash");
 
