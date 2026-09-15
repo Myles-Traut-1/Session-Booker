@@ -10,7 +10,7 @@ describe("error middleware", () => {
         const req = {} as Request;
         const res = {
             status: jest.fn().mockReturnThis(),
-            send: jest.fn()
+            json: jest.fn()
         } as Partial<Response> as Response;
 
         const next = jest.fn();
@@ -18,6 +18,6 @@ describe("error middleware", () => {
         errorMiddleware(err, req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.send).toHaveBeenCalledWith("An error occured fetching data...");
+        expect(res.json).toHaveBeenCalledWith({error: "Something Broke"});
     });
 });
