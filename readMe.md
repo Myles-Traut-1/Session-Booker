@@ -158,6 +158,5 @@ dev and CI need to be configured accordingly (see Testing below).
 
 ## Open / Not Yet Decided
 
-- `User.ts` — designed conceptually (fields, `role` as a TS union type), not yet written
-- Routes (auth, booking CRUD, admin views) — not yet designed
+- Routes (booking CRUD, admin views) — not yet designed
 - Whether students can cancel their own bookings, or only admins can delete bookings
