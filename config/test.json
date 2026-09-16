@@ -1,4 +1,5 @@
 {
-    "name": "Vidly",
-    "jwtPrivateKey": "session_testPrivateKey"
+    "name": "Session-Booker_V1",
+    "jwtPrivateKey": "session_testPrivateKey",
+    "db": "mongodb://placeholder-should-not-be-used"
 }

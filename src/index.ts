@@ -35,7 +35,7 @@ export async function startServer(): Promise<Server> {
 
     const port = process.env.PORT || 3000;
 
-    await mongoose.connect(config.get("db"));
+    await mongoose.connect(process.env.MONGO_URI ?? config.get("db"));
     console.log("connected to booking db");
         
     const server = app.listen(port, () => {
