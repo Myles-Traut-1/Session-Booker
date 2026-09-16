@@ -4,7 +4,7 @@ import {  type IUser, User } from "../models/users";
 import { type IRequestInput, type ILoginInput } from "../types/types";
 import bcrypt from "bcrypt";
 import Joi from 'joi';
-import auth from "../middleware/auth";
+import { auth } from "../middleware/auth";
 
 const router: Router = express.Router();
 
