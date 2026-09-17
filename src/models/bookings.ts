@@ -1,4 +1,5 @@
 import mongoose, { type Document } from "mongoose";
+import { normalizeDateToMidnightUTC } from "../utils/utils";
 
 interface IBooking extends Document {
     student: mongoose.Types.ObjectId,
@@ -17,11 +18,7 @@ const bookingSchema = new mongoose.Schema<IBooking>({
     date: {
         type: Date,
         required: true,
-        set: (val: Date | string) => {
-            const d = new Date(val);
-            d.setUTCHours(0, 0, 0, 0);
-            return d;
-        }
+        set: normalizeDateToMidnightUTC
     },
     slotIndex: {
         type: Number,

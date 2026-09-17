@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1789637920089" clover="3.2.0">
-  <project timestamp="1789637920089" name="All files">
-    <metrics statements="116" coveredstatements="112" conditionals="30" coveredconditionals="28" methods="17" coveredmethods="15" elements="163" coveredelements="155" complexity="0" loc="116" ncloc="116" packages="6" files="7" classes="7"/>
+<coverage generated="1789643068856" clover="3.2.0">
+  <project timestamp="1789643068856" name="All files">
+    <metrics statements="121" coveredstatements="117" conditionals="30" coveredconditionals="28" methods="18" coveredmethods="16" elements="169" coveredelements="161" complexity="0" loc="121" ncloc="121" packages="7" files="8" classes="8"/>
     <package name="src">
       <metrics statements="25" coveredstatements="21" conditionals="6" coveredconditionals="4" methods="4" coveredmethods="2"/>
       <file name="index.ts" path="/Users/home/Desktop/portfolio-projects/session-booker/src/index.ts">
@@ -155,6 +155,17 @@
         <line num="12" count="13" type="stmt"/>
         <line num="13" count="13" type="stmt"/>
         <line num="14" count="13" type="stmt"/>
+      </file>
+    </package>
+    <package name="src.utils">
+      <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+      <file name="utils.ts" path="/Users/home/Desktop/portfolio-projects/session-booker/src/utils/utils.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
       </file>
     </package>
   </project>
