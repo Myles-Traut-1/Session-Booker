@@ -1,4 +1,4 @@
-import mongoose, { type Document}from "mongoose";
+import mongoose, { type Document }from "mongoose";
 import jwt from "jsonwebtoken";
 import config from "config"
 
