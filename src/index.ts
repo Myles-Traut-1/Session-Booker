@@ -12,6 +12,7 @@ import error from "../src/middleware/error";
 /** -------- ROUTE IMPORTS -------- */
 
 import auth from "../src/routes/auth";
+import bookings from "../src/routes/bookings";
 
 const app = express();
 
@@ -19,7 +20,8 @@ const app = express();
 app.use(express.json());
 
 /** -------- ROUTES -------- */
-app.use("/api/auth", auth);
+app.use('/api/auth', auth);
+app.use('/api/booking', bookings);
 
 app.get('/health', (req, res) => {
     res.send("okay");
