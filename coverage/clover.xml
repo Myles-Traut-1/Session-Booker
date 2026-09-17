@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1789636676653" clover="3.2.0">
-  <project timestamp="1789636676653" name="All files">
+<coverage generated="1789637920089" clover="3.2.0">
+  <project timestamp="1789637920089" name="All files">
     <metrics statements="116" coveredstatements="112" conditionals="30" coveredconditionals="28" methods="17" coveredmethods="15" elements="163" coveredelements="155" complexity="0" loc="116" ncloc="116" packages="6" files="7" classes="7"/>
     <package name="src">
       <metrics statements="25" coveredstatements="21" conditionals="6" coveredconditionals="4" methods="4" coveredmethods="2"/>
@@ -146,14 +146,14 @@
       <metrics statements="9" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
       <file name="mongo-testSetup.ts" path="/Users/home/Desktop/portfolio-projects/session-booker/src/tests/test-utils/mongo-testSetup.ts">
         <metrics statements="9" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="4" count="2" type="stmt"/>
-        <line num="7" count="2" type="stmt"/>
-        <line num="8" count="2" type="stmt"/>
-        <line num="11" count="14" type="stmt"/>
-        <line num="12" count="14" type="stmt"/>
-        <line num="13" count="14" type="stmt"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="11" count="13" type="stmt"/>
+        <line num="12" count="13" type="stmt"/>
+        <line num="13" count="13" type="stmt"/>
         <line num="14" count="13" type="stmt"/>
       </file>
     </package>
