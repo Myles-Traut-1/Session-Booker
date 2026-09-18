@@ -21,7 +21,7 @@ app.use(express.json());
 
 /** -------- ROUTES -------- */
 app.use('/api/auth', auth);
-app.use('/api/booking', bookings);
+app.use('/api/bookings', bookings);
 
 app.get('/health', (req, res) => {
     res.send("okay");
