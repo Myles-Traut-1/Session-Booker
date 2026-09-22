@@ -16,6 +16,7 @@ interface IBookingRequest {
 }
 
 /** -------- POST -------- */
+/// TODO Add race condition prevention via WeeklyBooking Schema
 router.post('/', auth, async(req: Request, res: Response, next: NextFunction) => {
     const { error } = validateBookingRequest(req.body);
     if(error) {
@@ -24,17 +25,35 @@ router.post('/', auth, async(req: Request, res: Response, next: NextFunction) =>
 
     const id = (req.user as AuthResponse)._id;
 
-    /// TODO add check for booking cap and add transaction session to account for race condition
-    try{
-        const booking = await Booking.create({
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const bookingCap = await checkBookingCap(id, session);
+        
+        // Max 3 bookings per week
+        if(bookingCap >= 3) {
+            await session.abortTransaction();
+            return res.status(409).json({error: "Weekly Booking Cap Reached"});
+        }
+
+
+        const [booking] = await Booking.create([{
             student: id,
             date: normalizeDateToMidnightUTC(req.body.date),
             slotIndex: req.body.slotIndex
-        });
+        }], {session});
 
-        res.status(200).json({data: booking});
+        await session.commitTransaction();
+
+        return res.status(200).json({data: booking});
+
     } catch(err) {
-       next(err);
+        await session.abortTransaction();
+        next(err);
+    } finally {
+        await session.endSession();
     }
 });
 
@@ -47,4 +66,55 @@ const validateBookingRequest = (booking: IBookingRequest) => {
     })
 
     return schema.validate(booking);
+}
+
+const checkBookingCap = async (id: string, session: mongoose.ClientSession): Promise<number> => {
+    const startOfWeek = await getStartOfWeek();
+    const endOfWeek = await getEndOfWeek(startOfWeek);
+
+
+    const bookingCount = await Booking.countDocuments(
+        {
+            student: id, 
+            date: {
+                $gte: startOfWeek,
+                $lt: endOfWeek
+            }
+        }
+    ).session(session);
+
+    return bookingCount;
+}
+
+const getStartOfWeek = async (): Promise<Date> =>  {
+    // returns numbers 0 - 6 representing days o the week. Sunday = 0. Saturday = 6
+    const { monday, day } = await getWeekBoundries();
+
+    // How many days since today was the last monday. 
+    // If Sunday, then it was 6 days since the last Monday
+    const daysToCheck = day === 0 ? 6 : day - monday;
+
+    const  startOfWeek = normalizeDateToMidnightUTC(new Date());
+    startOfWeek.setUTCDate(startOfWeek.getUTCDate() - daysToCheck);
+
+    return startOfWeek
+}
+
+const getEndOfWeek = async (startOfWeek: Date): Promise<Date> => {
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setUTCDate(endOfWeek.getUTCDate() + 7);
+
+    return endOfWeek;
+}
+
+interface IWeekBoundries {
+    day: number,
+    monday: number
+}
+
+const getWeekBoundries = async (): Promise<IWeekBoundries> => {
+    const day = new Date().getUTCDay();
+    const monday = 1;
+
+    return { day, monday };
 }
