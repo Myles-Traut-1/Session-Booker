@@ -79,5 +79,29 @@ describe("/api/booking", () => {
             expect(res.status).toBe(409);
             expect(res.text).toMatch(/slot was just booked/);
         });
+        it("should return 401 status and error if booking date is a weekend", async() => {
+            const weekendDate = new Date("2026-09-26T12:00:00.000Z"); // Saturday
+            day = weekendDate.toISOString();
+
+            const res = await executeRequest();
+
+            expect(res.status).toBe(400);
+            expect(res.text).toMatch(/No Bookings on Weekends/i);
+        });
+        it("should return 409 status and error if booking cap reached", async() => {
+            await executeRequest();
+
+            slot = 1;
+            await executeRequest();
+
+            slot = 2;
+            await executeRequest();
+
+            slot = 3;
+            const res = await executeRequest();
+
+            expect(res.status).toBe(409);
+            expect(res.text).toMatch(/Booking Cap Reached/i);
+        });
     });
 });

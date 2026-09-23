@@ -25,6 +25,12 @@ router.post('/', auth, async(req: Request, res: Response, next: NextFunction) =>
 
     const id = (req.user as AuthResponse)._id;
 
+    const normalizedBookingDate = normalizeDateToMidnightUTC(req.body.date);
+
+    if(normalizedBookingDate.getUTCDay() === 0 || normalizedBookingDate.getUTCDay() === 6) {
+        return res.status(400).json({error: "No Bookings on Weekends"});
+    }
+
     const session = await mongoose.startSession();
 
     try {
@@ -41,7 +47,7 @@ router.post('/', auth, async(req: Request, res: Response, next: NextFunction) =>
 
         const [booking] = await Booking.create([{
             student: id,
-            date: normalizeDateToMidnightUTC(req.body.date),
+            date: normalizedBookingDate,
             slotIndex: req.body.slotIndex
         }], {session});
 
