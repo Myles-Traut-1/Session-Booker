@@ -5,6 +5,7 @@ import { User } from "../../../models/users";
 import { app } from "../../../index";
 
 import { normalizeDateToMidnightUTC } from "../../../utils/utils";
+import { getStartOfWeek } from "../../../services/booking-service";
 
 import request from "supertest";
 
@@ -13,6 +14,7 @@ describe("/api/booking", () => {
         await connectToDb();
     });
     afterEach(async() => {
+        jest.useRealTimers();
         await clearDatabase();
     });
     afterAll(async () => {
@@ -102,6 +104,20 @@ describe("/api/booking", () => {
 
             expect(res.status).toBe(409);
             expect(res.text).toMatch(/Booking Cap Reached/i);
+        });
+        it("should correctly calculate the start of the week when today is Sunday", async () => {
+            // 2026-09-27 is a real Sunday - confirmed by checking a calendar
+            const fakeSunday = new Date("2026-09-27T15:00:00.000Z");
+
+            jest.useFakeTimers();
+            jest.setSystemTime(fakeSunday);
+
+            const result = await getStartOfWeek();
+
+            // The Monday that started this same week - calculated by hand, not by the function under test
+            const expectedMonday = new Date("2026-09-21T00:00:00.000Z");
+
+            expect(result).toEqual(expectedMonday);
         });
     });
 });

@@ -1,19 +1,15 @@
 import express, { type NextFunction, type Request, type Response } from "express";
-import Joi from "joi";
+import mongoose from "mongoose";
 
-import { Booking, type IBooking } from "../models/bookings";
+import { Booking } from "../models/bookings";
 import { auth, admin } from "../middleware/auth";
 
 import { normalizeDateToMidnightUTC } from "../utils/utils"
-import mongoose from "mongoose";
+import { checkBookingCap, validateBookingRequest } from "../services/booking-service";
+
 import { AuthResponse } from "../types";
 
 const router = express.Router();
-
-interface IBookingRequest {
-    date: string,
-    time: string
-}
 
 /** -------- POST -------- */
 /// TODO Add race condition prevention via WeeklyBooking Schema
@@ -64,63 +60,3 @@ router.post('/', auth, async(req: Request, res: Response, next: NextFunction) =>
 });
 
 export default router;
-
-const validateBookingRequest = (booking: IBookingRequest) => {
-    const schema = Joi.object({
-        date: Joi.string().isoDate().required(),
-        slotIndex: Joi.number().min(0).max(8).required()
-    })
-
-    return schema.validate(booking);
-}
-
-const checkBookingCap = async (id: string, session: mongoose.ClientSession): Promise<number> => {
-    const startOfWeek = await getStartOfWeek();
-    const endOfWeek = await getEndOfWeek(startOfWeek);
-
-
-    const bookingCount = await Booking.countDocuments(
-        {
-            student: id, 
-            date: {
-                $gte: startOfWeek,
-                $lt: endOfWeek
-            }
-        }
-    ).session(session);
-
-    return bookingCount;
-}
-
-const getStartOfWeek = async (): Promise<Date> =>  {
-    // returns numbers 0 - 6 representing days o the week. Sunday = 0. Saturday = 6
-    const { monday, day } = await getWeekBoundries();
-
-    // How many days since today was the last monday. 
-    // If Sunday, then it was 6 days since the last Monday
-    const daysToCheck = day === 0 ? 6 : day - monday;
-
-    const  startOfWeek = normalizeDateToMidnightUTC(new Date());
-    startOfWeek.setUTCDate(startOfWeek.getUTCDate() - daysToCheck);
-
-    return startOfWeek
-}
-
-const getEndOfWeek = async (startOfWeek: Date): Promise<Date> => {
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setUTCDate(endOfWeek.getUTCDate() + 7);
-
-    return endOfWeek;
-}
-
-interface IWeekBoundries {
-    day: number,
-    monday: number
-}
-
-const getWeekBoundries = async (): Promise<IWeekBoundries> => {
-    const day = new Date().getUTCDay();
-    const monday = 1;
-
-    return { day, monday };
-}
