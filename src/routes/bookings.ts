@@ -37,6 +37,10 @@ router.get('/details', auth, async(req: Request, res: Response, next: NextFuncti
         // no date filter at all
     }
 
+    else {
+        return res.status(400).json({error: "malformed query scope"});
+    }
+
     try {
         const bookings = await Booking.find(filter);
 

@@ -185,6 +185,14 @@ describe("/api/booking", () => {
             data.some(booking => booking.date === futureDate);
             data.some(booking => booking.date === pastDate);
         });
+        it("should revert if scope is malformed", async() => {
+            scope = "crrnt-wk";
+
+            const res = await executeRequest();
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toMatch(/malformed query scope/i);
+        });
     });
     
     describe("POST /", () => {
