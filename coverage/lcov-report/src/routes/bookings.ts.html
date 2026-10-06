@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.66% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>44/48</span>
+                <span class='fraction'>48/48</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">72.22% </span>
+                <span class="strong">94.44% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>13/18</span>
+                <span class='fraction'>17/18</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.48% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>43/47</span>
+                <span class='fraction'>47/47</span>
             </div>
         
             
@@ -180,36 +180,36 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -266,7 +266,7 @@
 <span class="cline-any cline-yes">4x</span></td><td class="text"><pre class="prettyprint lang-js">import express, { type NextFunction, type Request, type Response } from "express";
 import mongoose from "mongoose";
 &nbsp;
-import { Booking } from "../models/bookings";
+import { Booking, type IBooking } from "../models/bookings";
 import { auth, admin } from "../middleware/auth";
 &nbsp;
 import { normalizeDateToMidnightUTC } from "../utils/utils"
@@ -293,12 +293,12 @@ router.get('/details', auth, async(req: Request, res: Response, next: NextFuncti
         filter.date = { $gte : startOfWeek, $lt: endOfWeek };
     }
 &nbsp;
-    else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (scope === "upcoming") {</span>
-        const endOfWeek = <span class="cstat-no" title="statement not covered" >getEndOfWeek(await getStartOfWeek());</span>
-<span class="cstat-no" title="statement not covered" >        filter.date = { $gte: endOfWeek };</span>
+    else if (scope === "upcoming") {
+        const endOfWeek = await getEndOfWeek(await getStartOfWeek());
+        filter.date = { $gte: endOfWeek };
     }
 &nbsp;
-    else <span class="cstat-no" title="statement not covered" >if (scope === 'all') {</span>
+    else <span class="missing-if-branch" title="else path not taken" >E</span>if (scope === 'all') {
         // no date filter at all
     }
 &nbsp;
@@ -370,7 +370,7 @@ export default router;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-10-06T10:52:07.681Z
+                at 2026-10-06T12:21:48.889Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -22,7 +22,7 @@ describe("/api/booking", () => {
         await disconnectFromDb();
     });
 
-    describe("GET /", () => {
+    describe("GET /details", () => {
         let token : string;
         let studentId : mongoose.Types.ObjectId;
         let booking1: IBooking;
@@ -81,6 +81,109 @@ describe("/api/booking", () => {
 
             expect(res.status).toBe(200);
             expect(res.body.message).toMatch(/No bookings made yet/i);
+        });
+    });
+
+    describe("GET /details?scope", () => {
+        let token : string;
+        let studentId : mongoose.Types.ObjectId;
+        
+        let scope: string | null
+
+        let currentDate: Date;
+        let futureDate: Date;
+        let pastDate: Date;
+
+        const executeRequest = () => {
+            return request(app)
+                .get("/api/bookings/details")
+                .set("x-auth-token", token)
+                .query(
+                    {
+                        scope
+                    }
+                );
+        }
+
+        beforeEach(async () => {
+            scope = null;
+
+            studentId = new mongoose.Types.ObjectId();
+
+            token = new User({_id: studentId, role: "student"}).generateAuthToken();
+            
+            currentDate = new Date();
+            futureDate = new Date();
+            pastDate = new Date();
+
+            futureDate.setUTCDate(futureDate.getUTCDate() + 7);
+            pastDate.setUTCDate(pastDate.getUTCDate() - 14); // two weeks ago
+
+            await Booking.create({
+                student: studentId,
+                date: currentDate.toISOString(),
+                slotIndex: 0
+            });
+
+            await Booking.create({
+                student: studentId,
+                date: currentDate.toISOString(),
+                slotIndex: 1
+            });
+
+            await Booking.create({
+                student: studentId,
+                date: futureDate.toISOString(),
+                slotIndex: 2
+            });
+
+            await Booking.create({
+                student: studentId,
+                date: pastDate.toISOString(),
+                slotIndex: 3
+            });
+        });
+
+        it("should return the current weeks bookings by default", async() => {
+            const res = await executeRequest();
+
+            const data = res.body.data;
+
+            expect(data.length).toEqual(2);
+            expect(data[0].date).toEqual(normalizeDateToMidnightUTC(currentDate).toISOString());
+            expect(data[1].date).toEqual(normalizeDateToMidnightUTC(currentDate).toISOString());
+        });
+        it("should return the current weeks bookings if scope equals current-week", async() => {
+            scope = "current-week";
+
+            const res = await executeRequest();
+
+            const data = res.body.data;
+
+            expect(data.length).toEqual(2);
+            expect(data[0].date).toEqual(normalizeDateToMidnightUTC(currentDate).toISOString());
+            expect(data[1].date).toEqual(normalizeDateToMidnightUTC(currentDate).toISOString());
+        });
+        it("should return future bookings if scope equals upcoming", async() => {
+            scope = "upcoming";
+
+            const res = await executeRequest();
+
+            const data = res.body.data;
+
+            expect(data.length).toEqual(1);
+            expect(data[0].date).toEqual(normalizeDateToMidnightUTC(futureDate).toISOString());
+        });
+        it("should return all bookings if scope equals all", async() => {
+            scope = "all";
+
+            const res = await executeRequest();
+            const data: IBooking[] = res.body.data;
+
+            expect(data.length).toEqual(4);
+            data.some(booking => booking.date === currentDate);
+            data.some(booking => booking.date === futureDate);
+            data.some(booking => booking.date === pastDate);
         });
     });
     

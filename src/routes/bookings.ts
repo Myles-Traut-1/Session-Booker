@@ -1,7 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import mongoose from "mongoose";
 
-import { Booking } from "../models/bookings";
+import { Booking, type IBooking } from "../models/bookings";
 import { auth, admin } from "../middleware/auth";
 
 import { normalizeDateToMidnightUTC } from "../utils/utils"
@@ -29,7 +29,7 @@ router.get('/details', auth, async(req: Request, res: Response, next: NextFuncti
     }
 
     else if (scope === "upcoming") {
-        const endOfWeek = getEndOfWeek(await getStartOfWeek());
+        const endOfWeek = await getEndOfWeek(await getStartOfWeek());
         filter.date = { $gte: endOfWeek };
     }
 
