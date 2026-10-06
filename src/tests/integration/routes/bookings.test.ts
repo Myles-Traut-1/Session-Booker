@@ -1,6 +1,6 @@
 import { connectToDb, disconnectFromDb, clearDatabase } from "../../test-utils/mongo-testSetup"
 
-import { Booking } from "../../../models/bookings";
+import { Booking, IBooking } from "../../../models/bookings";
 import { User } from "../../../models/users";
 import { app } from "../../../index";
 
@@ -8,6 +8,7 @@ import { normalizeDateToMidnightUTC } from "../../../utils/utils";
 import { getStartOfWeek } from "../../../services/booking-service";
 
 import request from "supertest";
+import mongoose from "mongoose";
 
 describe("/api/booking", () => {
     beforeAll(async () => {
@@ -19,6 +20,68 @@ describe("/api/booking", () => {
     });
     afterAll(async () => {
         await disconnectFromDb();
+    });
+
+    describe("GET /", () => {
+        let token : string;
+        let studentId : mongoose.Types.ObjectId;
+        let booking1: IBooking;
+        let booking2: IBooking;
+
+        const executeRequest = () => {
+            return request(app).get("/api/bookings/details").set("x-auth-token", token);
+        }
+
+        beforeEach(async () => {
+            studentId = new mongoose.Types.ObjectId();
+
+            token = new User({_id: studentId, role: "student"}).generateAuthToken();
+
+            booking1 = await Booking.create({
+                student: studentId,
+                date: new Date().toISOString(),
+                slotIndex: 0
+            });
+
+            booking2 = await Booking.create({
+                student: studentId,
+                date: new Date().toISOString(),
+                slotIndex: 1
+            });
+        });
+
+        it("should return a 200 status on successful request", async() => {
+            const res = await executeRequest();
+
+            expect(res.status).toBe(200);
+        });
+        it("should return an array of two bookings", async() => {
+            const res = await executeRequest();
+
+            const data = res.body.data;
+
+            expect(data.length).toEqual(2);
+            expect(data[0]).toHaveProperty("student", studentId.toHexString());
+            expect(data[1]).toHaveProperty("student", studentId.toHexString());
+            expect(data[0]).toHaveProperty("slotIndex", 0);
+            expect(data[1]).toHaveProperty("slotIndex", 1);
+            
+        });
+        it("should return a 401 status if not logged in", async() => {
+            token = "";
+
+            const res = await executeRequest();
+
+            expect(res.status).toBe(401);
+        });
+        it("should return a message if no bookings have been made", async() => {
+            await Booking.deleteMany({ student: studentId });
+
+            const res = await executeRequest();
+
+            expect(res.status).toBe(200);
+            expect(res.body.message).toMatch(/No bookings made yet/i);
+        });
     });
     
     describe("POST /", () => {

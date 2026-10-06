@@ -11,8 +11,29 @@ import { AuthResponse } from "../types";
 
 const router = express.Router();
 
+/** -------- GET -------- */
+
+router.get('/details', auth, async(req: Request, res: Response, next: NextFunction) => {
+    const user = req.user as AuthResponse;
+    const id = user._id;
+
+    try {
+        const bookings = await Booking.find({
+            student: id
+        });
+
+        if(bookings.length === 0) {
+            res.status(200).json({message: "No bookings made yet"});
+        }
+
+        res.json({data: bookings});
+    } catch(err) {
+        next(err);
+    }
+});
+
 /** -------- POST -------- */
-/// TODO Add race condition prevention via WeeklyBooking Schema
+/// TODO concurency guard via counter document
 router.post('/', auth, async(req: Request, res: Response, next: NextFunction) => {
     const { error } = validateBookingRequest(req.body);
     if(error) {
