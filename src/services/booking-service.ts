@@ -77,4 +77,9 @@ const getWeekBoundries = async (): Promise<IWeekBoundries> => {
 
 /** ------ EXPORTS ------ */
 
-export { checkBookingCap, validateBookingRequest, getStartOfWeek }
+export { 
+    checkBookingCap, 
+    validateBookingRequest, 
+    getStartOfWeek, 
+    getEndOfWeek 
+}

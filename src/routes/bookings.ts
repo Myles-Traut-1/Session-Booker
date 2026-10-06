@@ -5,7 +5,8 @@ import { Booking } from "../models/bookings";
 import { auth, admin } from "../middleware/auth";
 
 import { normalizeDateToMidnightUTC } from "../utils/utils"
-import { checkBookingCap, validateBookingRequest } from "../services/booking-service";
+import { checkBookingCap, validateBookingRequest, getStartOfWeek, getEndOfWeek  } 
+    from "../services/booking-service";
 
 import { AuthResponse } from "../types";
 
@@ -14,13 +15,30 @@ const router = express.Router();
 /** -------- GET -------- */
 
 router.get('/details', auth, async(req: Request, res: Response, next: NextFunction) => {
-    const user = req.user as AuthResponse;
-    const id = user._id;
+    const id = (req.user as AuthResponse)._id;
+
+    const scope = req.query.scope as string;
+
+    const filter: Record<string, unknown> = { student: id };
+
+    const startOfWeek = await getStartOfWeek();
+    const endOfWeek = await getEndOfWeek(startOfWeek);
+
+    if(scope === "current-week" || !scope ) {
+        filter.date = { $gte : startOfWeek, $lt: endOfWeek };
+    }
+
+    else if (scope === "upcoming") {
+        const endOfWeek = getEndOfWeek(await getStartOfWeek());
+        filter.date = { $gte: endOfWeek };
+    }
+
+    else if (scope === 'all') {
+        // no date filter at all
+    }
 
     try {
-        const bookings = await Booking.find({
-            student: id
-        });
+        const bookings = await Booking.find(filter);
 
         if(bookings.length === 0) {
             res.status(200).json({message: "No bookings made yet"});
