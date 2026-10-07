@@ -5,7 +5,7 @@ import { Booking, type IBooking } from "../models/bookings";
 import { auth, admin } from "../middleware/auth";
 
 import { normalizeDateToMidnightUTC } from "../utils/utils"
-import { checkBookingCap, validateBookingRequest, getStartOfWeek, getEndOfWeek  } 
+import { checkBookingCap, validateBookingRequest, getStartOfWeek, getEndOfWeek, parseQueryPageParams,  parseQueryScope } 
     from "../services/booking-service";
 
 import { AuthResponse } from "../types";
@@ -14,32 +14,6 @@ const router = express.Router();
 
 const BOOKINGS_PAGE_SIZE = 20; 
 
-
-const parseQueryPageParams = (query: unknown): number => {
-    if (typeof query !== "string") {
-        return 1;
-    }
-
-    const formattedQuery = parseInt(query);
-
-    if (Number.isNaN(formattedQuery)) {
-        return 1;
-    }
-
-    if (formattedQuery <= 0) {
-        return 1;
-    }
-
-    return formattedQuery;
-}
-
-const parseQueryScope = (queryScope: unknown): string => {
-    if (typeof queryScope !== "string") {
-        return "current-week";
-    }
-
-    return queryScope;
-}
 
 /** -------- GET -------- */
 

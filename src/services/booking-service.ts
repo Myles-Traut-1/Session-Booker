@@ -75,11 +75,39 @@ const getWeekBoundries = async (): Promise<IWeekBoundries> => {
     return { day, monday };
 }
 
+const parseQueryPageParams = (query: unknown): number => {
+    if (typeof query !== "string") {
+        return 1;
+    }
+
+    const formattedQuery = parseInt(query);
+
+    if (Number.isNaN(formattedQuery)) {
+        return 1;
+    }
+
+    if (formattedQuery <= 0) {
+        return 1;
+    }
+
+    return formattedQuery;
+}
+
+const parseQueryScope = (queryScope: unknown): string => {
+    if (typeof queryScope !== "string") {
+        return "current-week";
+    }
+
+    return queryScope;
+}
+
 /** ------ EXPORTS ------ */
 
 export { 
     checkBookingCap, 
     validateBookingRequest, 
     getStartOfWeek, 
-    getEndOfWeek 
+    getEndOfWeek,
+    parseQueryPageParams,
+    parseQueryScope
 }
