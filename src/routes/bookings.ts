@@ -12,12 +12,44 @@ import { AuthResponse } from "../types";
 
 const router = express.Router();
 
+const BOOKINGS_PAGE_SIZE = 20; 
+
+
+const parseQueryPageParams = (query: unknown): number => {
+    if (typeof query !== "string") {
+        return 1;
+    }
+
+    const formattedQuery = parseInt(query);
+
+    if (Number.isNaN(formattedQuery)) {
+        return 1;
+    }
+
+    if (formattedQuery <= 0) {
+        return 1;
+    }
+
+    return formattedQuery;
+}
+
+const parseQueryScope = (queryScope: unknown): string => {
+    if (typeof queryScope !== "string") {
+        return "current-week";
+    }
+
+    return queryScope;
+}
+
 /** -------- GET -------- */
 
 router.get('/details', auth, async(req: Request, res: Response, next: NextFunction) => {
     const id = (req.user as AuthResponse)._id;
 
-    const scope = req.query.scope as string;
+    const scope = parseQueryScope(req.query.scope);
+
+    const page = parseQueryPageParams(req.query.page);
+    const skip = (page - 1) * BOOKINGS_PAGE_SIZE;
 
     const filter: Record<string, unknown> = { student: id };
 
@@ -29,7 +61,6 @@ router.get('/details', auth, async(req: Request, res: Response, next: NextFuncti
     }
 
     else if (scope === "upcoming") {
-        const endOfWeek = await getEndOfWeek(await getStartOfWeek());
         filter.date = { $gte: endOfWeek };
     }
 
@@ -42,13 +73,23 @@ router.get('/details', auth, async(req: Request, res: Response, next: NextFuncti
     }
 
     try {
-        const bookings = await Booking.find(filter);
+        const [bookings, totalCount] = await Promise.all([Booking.find(filter).sort({date: 1}).skip(skip).limit(BOOKINGS_PAGE_SIZE),
+            Booking.countDocuments(filter)
+        ]);
 
         if(bookings.length === 0) {
-            res.status(200).json({message: "No bookings made yet"});
+            return res.status(200).json({message: "No bookings made yet"});
         }
 
-        res.json({data: bookings});
+        res.json({
+            data: bookings,
+            pagination: {
+                page,
+                pageSize: BOOKINGS_PAGE_SIZE,
+                totalCount,
+                totalPages: Math.ceil(totalCount / BOOKINGS_PAGE_SIZE) 
+            }
+        });
     } catch(err) {
         next(err);
     }
