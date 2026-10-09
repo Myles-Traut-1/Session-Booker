@@ -276,8 +276,8 @@ describe("/api/booking", () => {
             slot = 3;
             const res = await executeRequest();
 
-            // expect(res.status).toBe(409);
-            // expect(res.text).toMatch(/Booking Cap Reached/i);
+            expect(res.status).toBe(409);
+            expect(res.text).toMatch(/Booking Cap Reached/i);
         });
         it("should correctly calculate the start of the week when today is Sunday", async () => {
             // 2026-09-27 is a real Sunday - confirmed by checking a calendar
