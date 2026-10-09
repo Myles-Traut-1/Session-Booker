@@ -90,7 +90,8 @@ router.post('/', auth, async(req: Request, res: Response, next: NextFunction) =>
 
     try {
         session.startTransaction();
-
+        /// BUG! 
+        // This always returns the start of the current week. Needs to return the start of the week for a given Date.
         const startOfWeek = await getStartOfWeek();
 
         /**

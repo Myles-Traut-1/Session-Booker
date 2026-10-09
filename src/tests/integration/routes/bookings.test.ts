@@ -9,6 +9,7 @@ import { getStartOfWeek } from "../../../services/booking-service";
 
 import request from "supertest";
 import mongoose from "mongoose";
+import { WeeklyBookingCount, type IWeeklyBookingCount } from "../../../models/booking-count";
 
 describe("/api/booking", () => {
     beforeAll(async () => {
@@ -199,6 +200,7 @@ describe("/api/booking", () => {
         let day: string;
         let slot: number;
         let token: string;
+        let userId: mongoose.Types.ObjectId;
 
         const executeRequest = () => {
             return request(app).post('/api/bookings').set("x-auth-token", token).send({
@@ -210,8 +212,8 @@ describe("/api/booking", () => {
         beforeEach(async() => {
             day = new Date().toISOString();
             slot = 0;
-
-            token = new User().generateAuthToken();
+            userId = new mongoose.Types.ObjectId();
+            token = new User({_id: userId}).generateAuthToken();
         });
 
 
@@ -292,6 +294,41 @@ describe("/api/booking", () => {
             const expectedMonday = new Date("2026-09-21T00:00:00.000Z");
 
             expect(result).toEqual(expectedMonday);
+        });
+        it("should increase the counter for consecutive bookings", async() => {
+            let weeklyCount : IWeeklyBookingCount | null = await WeeklyBookingCount.findOne({studentId: userId});
+            expect(weeklyCount).toBeNull();
+            
+            await executeRequest();
+            weeklyCount = await WeeklyBookingCount.findOne({studentId: userId});
+            expect((weeklyCount as IWeeklyBookingCount).weeklyCount).toEqual(1);
+
+            slot = 1;
+            await executeRequest();
+            weeklyCount = await WeeklyBookingCount.findOne({studentId: userId});
+            expect((weeklyCount as IWeeklyBookingCount).weeklyCount).toEqual(2);
+        });
+        it("should reset the counter for bookings in a new week", async() => {
+            let weeklyCount : IWeeklyBookingCount | null = await WeeklyBookingCount.findOne({studentId: userId});
+            expect(weeklyCount).toBeNull();
+            
+            await executeRequest();
+            weeklyCount = await WeeklyBookingCount.findOne({studentId: userId});
+            expect((weeklyCount as IWeeklyBookingCount).weeklyCount).toEqual(1);
+
+            slot = 1;
+            await executeRequest();
+            weeklyCount = await WeeklyBookingCount.findOne({studentId: userId});
+            expect((weeklyCount as IWeeklyBookingCount).weeklyCount).toEqual(2);
+            console.log(weeklyCount);
+
+            // 1 week into the future
+            day = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
+            const res = await executeRequest();
+            console.log(res.body);
+            let weeklyCountArray = await WeeklyBookingCount.find({studentId: userId});
+            console.log(weeklyCountArray);
+
         });
     });
 });

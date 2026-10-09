@@ -43,6 +43,18 @@ const getStartOfWeek = async (): Promise<Date> =>  {
     return startOfWeek
 }
 
+// const getStartOfWeek = (date: Date | string = new Date()): Date => {
+//     const startOfWeek = normalizeDateToMidnightUTC(date);
+//     const day = startOfWeek.getUTCDay();
+//     const daysSinceMonday = day === 0 ? 6 : day - 1;
+
+//     startOfWeek.setUTCDate(
+//         startOfWeek.getUTCDate() - daysSinceMonday
+//     );
+
+//     return startOfWeek;
+// };
+
 const getEndOfWeek = async (startOfWeek: Date): Promise<Date> => {
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setUTCDate(endOfWeek.getUTCDate() + 7);
