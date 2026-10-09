@@ -29,24 +29,6 @@ const validateBookingRequest = (booking: IBookingRequest) => {
 
 /** ------ HELPERS ------ */
 
-const checkBookingCap = async (id: string, session: mongoose.ClientSession): Promise<number> => {
-    const startOfWeek = await getStartOfWeek();
-    const endOfWeek = await getEndOfWeek(startOfWeek);
-
-
-    const bookingCount = await Booking.countDocuments(
-        {
-            student: id, 
-            date: {
-                $gte: startOfWeek,
-                $lt: endOfWeek
-            }
-        }
-    ).session(session);
-
-    return bookingCount;
-}
-
 const getStartOfWeek = async (): Promise<Date> =>  {
     // returns numbers 0 - 6 representing days o the week. Sunday = 0. Saturday = 6
     const { monday, day } = await getWeekBoundries();
@@ -103,8 +85,7 @@ const parseQueryScope = (queryScope: unknown): string => {
 
 /** ------ EXPORTS ------ */
 
-export { 
-    checkBookingCap, 
+export {
     validateBookingRequest, 
     getStartOfWeek, 
     getEndOfWeek,

@@ -2,10 +2,11 @@ import express, { type NextFunction, type Request, type Response } from "express
 import mongoose from "mongoose";
 
 import { Booking, type IBooking } from "../models/bookings";
+import { WeeklyBookingCount, type IWeeklyBookingCount } from "../models/booking-count";
 import { auth, admin } from "../middleware/auth";
 
 import { normalizeDateToMidnightUTC } from "../utils/utils"
-import { checkBookingCap, validateBookingRequest, getStartOfWeek, getEndOfWeek, parseQueryPageParams,  parseQueryScope } 
+import { validateBookingRequest, getStartOfWeek, getEndOfWeek, parseQueryPageParams,  parseQueryScope } 
     from "../services/booking-service";
 
 import { AuthResponse } from "../types";
@@ -90,14 +91,41 @@ router.post('/', auth, async(req: Request, res: Response, next: NextFunction) =>
     try {
         session.startTransaction();
 
-        const bookingCap = await checkBookingCap(id, session);
+        const startOfWeek = await getStartOfWeek();
+
+        /**
+         * Concurrency Guard
+         * Spilt in two steps to prevent triggering Mongo Duplicate Key Error on counter > 3  
+        */
         
-        // Max 3 bookings per week
-        if(bookingCap >= 3) {
+        // Step 1: Check if weeklyCounter Doc exists. If not create it. 
+        await WeeklyBookingCount.findOneAndUpdate({
+            studentId : id,
+            weekStart: startOfWeek
+        }, 
+        {
+            $setOnInsert: {weeklyCount: 0}
+        },
+        {
+            session, returnDocument: "after", upsert: true
+        },
+        );
+
+        // Step 2: Increment counter.
+        let weeklyBookingDoc: IWeeklyBookingCount | null = await WeeklyBookingCount.findOneAndUpdate({
+            studentId : id,
+            weekStart: startOfWeek,
+            weeklyCount: {$lt: 3}}, 
+            {$inc: {
+                    weeklyCount: 1
+            }},
+            {session, returnDocument: "after"},
+        );
+
+        if(weeklyBookingDoc === null) {
             await session.abortTransaction();
             return res.status(409).json({error: "Weekly Booking Cap Reached"});
         }
-
 
         const [booking] = await Booking.create([{
             student: id,
