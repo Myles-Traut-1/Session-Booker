@@ -24,7 +24,7 @@ describe("weekly booking count tests", () => {
         userId = new mongoose.Types.ObjectId();
         user = new User({_id: userId});
 
-        startOfWeek = await getStartOfWeek();
+        startOfWeek = await getStartOfWeek(new Date());
     });
 
     it("should create a document if none exits and then increment to weeklyCount to 1", async() => {

@@ -202,15 +202,15 @@ describe("/api/booking", () => {
         let token: string;
         let userId: mongoose.Types.ObjectId;
 
-        const executeRequest = () => {
-            return request(app).post('/api/bookings').set("x-auth-token", token).send({
-                date: day,
-                slotIndex: slot
-            });
-        }
+        const executeRequest = async (slotIndex: number, authToken: string) => {
+            return request(app)
+                .post("/api/bookings")
+                .set("x-auth-token", authToken)
+                .send({ date: day, slotIndex });
+        };
 
         beforeEach(async() => {
-            day = new Date().toISOString();
+            day = new Date("2026-09-21T00:00:00.000Z").toISOString(); // Monday
             slot = 0;
             userId = new mongoose.Types.ObjectId();
             token = new User({_id: userId}).generateAuthToken();
@@ -219,26 +219,26 @@ describe("/api/booking", () => {
 
 
         it("should return a 200 status on success", async () => {
-            const res = await executeRequest();
+            const res = await executeRequest(slot, token);
 
             expect(res.status).toBe(200);
         });
         it("should return a 400 response for bad request", async() => {
             day = new Date().toString(); // Malformated input
-            const res = await executeRequest();
+            const res = await executeRequest(slot, token);
 
             expect(res.status).toBe(400);
             expect(res.text).toMatch(/must be in iso format/);
         });
         it("should return 401 response if not logged in", async() => {
             token = "";
-            const res = await executeRequest();
+            const res = await executeRequest(slot, token);
 
             expect(res.status).toBe(401);
             expect(res.text).toMatch(/No token provided/);
         });
         it("should create a new booking in the db", async() => {
-            await executeRequest();
+            await executeRequest(slot, token);
 
             const bookingInDb = await Booking.findOne({date: day, slotIndex: slot});
 
@@ -250,9 +250,9 @@ describe("/api/booking", () => {
 
         });
         it("should revert and return 409 status if booking the same date and slot", async() => {
-            await executeRequest();
+            await executeRequest(slot, token);
 
-            const res = await executeRequest();
+            const res = await executeRequest(slot, token);
 
             expect(res.status).toBe(409);
             expect(res.text).toMatch(/slot was just booked/);
@@ -261,22 +261,22 @@ describe("/api/booking", () => {
             const weekendDate = new Date("2026-09-26T12:00:00.000Z"); // Saturday
             day = weekendDate.toISOString();
 
-            const res = await executeRequest();
+            const res = await executeRequest(slot, token);
 
             expect(res.status).toBe(400);
             expect(res.text).toMatch(/No Bookings on Weekends/i);
         });
         it("should return 409 status and error if booking cap reached", async() => {
-            await executeRequest();
+            await executeRequest(slot, token);
 
             slot = 1;
-            await executeRequest();
+            await executeRequest(slot, token);
 
             slot = 2;
-            await executeRequest();
+            await executeRequest(slot, token);
 
             slot = 3;
-            const res = await executeRequest();
+            const res = await executeRequest(slot, token);
 
             expect(res.status).toBe(409);
             expect(res.text).toMatch(/Booking Cap Reached/i);
@@ -288,7 +288,7 @@ describe("/api/booking", () => {
             jest.useFakeTimers();
             jest.setSystemTime(fakeSunday);
 
-            const result = await getStartOfWeek();
+            const result = await getStartOfWeek(fakeSunday);
 
             // The Monday that started this same week - calculated by hand, not by the function under test
             const expectedMonday = new Date("2026-09-21T00:00:00.000Z");
@@ -299,12 +299,12 @@ describe("/api/booking", () => {
             let weeklyCount : IWeeklyBookingCount | null = await WeeklyBookingCount.findOne({studentId: userId});
             expect(weeklyCount).toBeNull();
             
-            await executeRequest();
+            await executeRequest(slot, token);
             weeklyCount = await WeeklyBookingCount.findOne({studentId: userId});
             expect((weeklyCount as IWeeklyBookingCount).weeklyCount).toEqual(1);
 
             slot = 1;
-            await executeRequest();
+            await executeRequest(slot, token);
             weeklyCount = await WeeklyBookingCount.findOne({studentId: userId});
             expect((weeklyCount as IWeeklyBookingCount).weeklyCount).toEqual(2);
         });
@@ -312,23 +312,90 @@ describe("/api/booking", () => {
             let weeklyCount : IWeeklyBookingCount | null = await WeeklyBookingCount.findOne({studentId: userId});
             expect(weeklyCount).toBeNull();
             
-            await executeRequest();
+            await executeRequest(slot, token);
             weeklyCount = await WeeklyBookingCount.findOne({studentId: userId});
             expect((weeklyCount as IWeeklyBookingCount).weeklyCount).toEqual(1);
 
             slot = 1;
-            await executeRequest();
+            await executeRequest(slot, token);
             weeklyCount = await WeeklyBookingCount.findOne({studentId: userId});
             expect((weeklyCount as IWeeklyBookingCount).weeklyCount).toEqual(2);
-            console.log(weeklyCount);
 
             // 1 week into the future
-            day = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
-            const res = await executeRequest();
-            console.log(res.body);
-            let weeklyCountArray = await WeeklyBookingCount.find({studentId: userId});
-            console.log(weeklyCountArray);
+            let futureDate: Date = new Date(day);
+            futureDate.setDate(futureDate.getDate() + 7);
 
+            day = futureDate.toISOString();
+            // New booking. Should reset counter
+            await executeRequest(slot, token);
+
+            let weeklyCountArray = await WeeklyBookingCount.find({studentId: userId});
+            expect(weeklyCountArray.length).toEqual(2);
+
+            let futureStartOfWeek = await getStartOfWeek(futureDate);
+
+            weeklyCount = await WeeklyBookingCount.findOne({studentId: userId, weekStart: futureStartOfWeek});
+            expect(weeklyCount?.weeklyCount).toEqual(1);
+        });
+        it("should enforce concurrency", async() => {
+            let newStudentToken: string;
+            let newStudentId: mongoose.Types.ObjectId;
+
+            day = new Date("2026-09-22T00:00:00.000Z").toISOString(); // Tuesday
+            newStudentId = new mongoose.Types.ObjectId();
+            newStudentToken = new User({_id: newStudentId}).generateAuthToken();
+
+            let startOfWeek = await getStartOfWeek(new Date(day));
+
+            await WeeklyBookingCount.insertOne({
+                studentId : newStudentId,
+                weeklyCount: 2,
+                weekStart: startOfWeek
+            });
+
+            let bookingCount = await WeeklyBookingCount.findOne({studentId: newStudentId});
+            expect((bookingCount as IWeeklyBookingCount).weeklyCount).toEqual(2);
+
+            const responses = await Promise.all(
+                Array.from({ length: 7 }, (_, slotIndex) =>
+                    executeRequest(slotIndex, newStudentToken)
+                )
+            );
+
+            const statuses = responses.map((response) => response.status);
+            console.log(statuses);
+
+            expect(statuses.filter((s) => s === 200)).toHaveLength(1);
+            expect(statuses.filter((s) => s === 409)).toHaveLength(6)
+
+            const count = await Booking.countDocuments({ student: newStudentId });
+            expect(count).toEqual(1);
+
+            bookingCount = await WeeklyBookingCount.findOne({studentId: newStudentId});
+            expect((bookingCount as IWeeklyBookingCount).weeklyCount).toEqual(3);
+        });
+        it("should enforce concurrency with successful retries", async() => {
+            let newStudentToken: string;
+            let newStudentId: mongoose.Types.ObjectId;
+
+            day = new Date("2026-09-22T00:00:00.000Z").toISOString(); // Tuesday
+            newStudentId = new mongoose.Types.ObjectId();
+            newStudentToken = new User({_id: newStudentId}).generateAuthToken();
+
+            const responses = await Promise.all(
+                Array.from({ length: 7 }, (_, slotIndex) =>
+                    executeRequest(slotIndex, newStudentToken)
+                )
+            );
+
+            const statuses = responses.map((response) => response.status);
+            console.log(statuses);
+
+            expect(statuses.filter((s) => s === 200)).toHaveLength(3);
+            expect(statuses.filter((s) => s === 409)).toHaveLength(4)
+
+            let bookingCount = await WeeklyBookingCount.findOne({studentId: newStudentId});
+            expect((bookingCount as IWeeklyBookingCount).weeklyCount).toEqual(3);
         });
     });
 });

@@ -29,7 +29,7 @@ const validateBookingRequest = (booking: IBookingRequest) => {
 
 /** ------ HELPERS ------ */
 
-const getStartOfWeek = async (): Promise<Date> =>  {
+const getStartOfWeek = async (date: Date): Promise<Date> =>  {
     // returns numbers 0 - 6 representing days o the week. Sunday = 0. Saturday = 6
     const { monday, day } = await getWeekBoundries();
 
@@ -37,23 +37,11 @@ const getStartOfWeek = async (): Promise<Date> =>  {
     // If Sunday, then it was 6 days since the last Monday
     const daysToCheck = day === 0 ? 6 : day - monday;
 
-    const  startOfWeek = normalizeDateToMidnightUTC(new Date());
+    const  startOfWeek = normalizeDateToMidnightUTC(date);
     startOfWeek.setUTCDate(startOfWeek.getUTCDate() - daysToCheck);
 
     return startOfWeek
 }
-
-// const getStartOfWeek = (date: Date | string = new Date()): Date => {
-//     const startOfWeek = normalizeDateToMidnightUTC(date);
-//     const day = startOfWeek.getUTCDay();
-//     const daysSinceMonday = day === 0 ? 6 : day - 1;
-
-//     startOfWeek.setUTCDate(
-//         startOfWeek.getUTCDate() - daysSinceMonday
-//     );
-
-//     return startOfWeek;
-// };
 
 const getEndOfWeek = async (startOfWeek: Date): Promise<Date> => {
     const endOfWeek = new Date(startOfWeek);
@@ -63,6 +51,7 @@ const getEndOfWeek = async (startOfWeek: Date): Promise<Date> => {
 }
 
 const getWeekBoundries = async (): Promise<IWeekBoundries> => {
+    // 0 -> 6 = Sun -> Sat
     const day = new Date().getUTCDay();
     const monday = 1;
 
@@ -70,18 +59,20 @@ const getWeekBoundries = async (): Promise<IWeekBoundries> => {
 }
 
 const parseQueryPageParams = (query: unknown): number => {
+    const defaultPage: number = 1;
+    
     if (typeof query !== "string") {
-        return 1;
+        return defaultPage;
     }
 
     const formattedQuery = parseInt(query);
 
     if (Number.isNaN(formattedQuery)) {
-        return 1;
+        return defaultPage;
     }
 
     if (formattedQuery <= 0) {
-        return 1;
+        return defaultPage;
     }
 
     return formattedQuery;

@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>37/37</span>
+                <span class='fraction'>38/38</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>37/37</span>
+                <span class='fraction'>38/38</span>
             </div>
         
             
@@ -156,7 +156,10 @@
 <a name='L91'></a><a href='#L91'>91</a>
 <a name='L92'></a><a href='#L92'>92</a>
 <a name='L93'></a><a href='#L93'>93</a>
-<a name='L94'></a><a href='#L94'>94</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -177,28 +180,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">29x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">29x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">55x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">55x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">24x</span>
-<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">55x</span>
+<span class="cline-any cline-yes">55x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">55x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
@@ -209,13 +212,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">24x</span>
-<span class="cline-any cline-yes">24x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">55x</span>
+<span class="cline-any cline-yes">55x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">55x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -244,8 +250,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-yes">55x</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-yes">10x</span>
@@ -280,7 +286,7 @@ const validateBookingRequest = (booking: IBookingRequest) =&gt; {
 &nbsp;
 /** ------ HELPERS ------ */
 &nbsp;
-const getStartOfWeek = async (): Promise&lt;Date&gt; =&gt;  {
+const getStartOfWeek = async (date: Date): Promise&lt;Date&gt; =&gt;  {
     // returns numbers 0 - 6 representing days o the week. Sunday = 0. Saturday = 6
     const { monday, day } = await getWeekBoundries();
 &nbsp;
@@ -288,7 +294,7 @@ const getStartOfWeek = async (): Promise&lt;Date&gt; =&gt;  {
     // If Sunday, then it was 6 days since the last Monday
     const daysToCheck = day === 0 ? 6 : day - monday;
 &nbsp;
-    const  startOfWeek = normalizeDateToMidnightUTC(new Date());
+    const  startOfWeek = normalizeDateToMidnightUTC(date);
     startOfWeek.setUTCDate(startOfWeek.getUTCDate() - daysToCheck);
 &nbsp;
     return startOfWeek
@@ -302,6 +308,7 @@ const getEndOfWeek = async (startOfWeek: Date): Promise&lt;Date&gt; =&gt; {
 }
 &nbsp;
 const getWeekBoundries = async (): Promise&lt;IWeekBoundries&gt; =&gt; {
+    // 0 -&gt; 6 = Sun -&gt; Sat
     const day = new Date().getUTCDay();
     const monday = 1;
 &nbsp;
@@ -309,18 +316,20 @@ const getWeekBoundries = async (): Promise&lt;IWeekBoundries&gt; =&gt; {
 }
 &nbsp;
 const parseQueryPageParams = (query: unknown): number =&gt; {
+    const defaultPage: number = 1;
+    
     if (typeof query !== "string") {
-        return 1;
+        return defaultPage;
     }
 &nbsp;
     const formattedQuery = parseInt(query);
 &nbsp;
     if (Number.isNaN(formattedQuery)) {
-        return 1;
+        return defaultPage;
     }
 &nbsp;
     if (formattedQuery &lt;= 0) {
-        return 1;
+        return defaultPage;
     }
 &nbsp;
     return formattedQuery;
@@ -349,7 +358,7 @@ export {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-10-09T11:19:09.778Z
+                at 2026-10-12T13:28:52.529Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

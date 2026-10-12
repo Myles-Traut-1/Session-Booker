@@ -15,6 +15,7 @@ const router = express.Router();
 
 const BOOKINGS_PAGE_SIZE = 20; 
 
+class WeeklyCapReachedError extends Error {}
 
 /** -------- GET -------- */
 
@@ -28,8 +29,8 @@ router.get('/details', auth, async(req: Request, res: Response, next: NextFuncti
 
     const filter: Record<string, unknown> = { student: id };
 
-    const startOfWeek = await getStartOfWeek();
-    const endOfWeek = await getEndOfWeek(startOfWeek);
+    let startOfWeek: Date = await getStartOfWeek(new Date());
+    let endOfWeek: Date = await getEndOfWeek(startOfWeek);
 
     if(scope === "current-week" || !scope ) {
         filter.date = { $gte : startOfWeek, $lt: endOfWeek };
@@ -71,7 +72,6 @@ router.get('/details', auth, async(req: Request, res: Response, next: NextFuncti
 });
 
 /** -------- POST -------- */
-/// TODO concurency guard via counter document
 router.post('/', auth, async(req: Request, res: Response, next: NextFunction) => {
     const { error } = validateBookingRequest(req.body);
     if(error) {
@@ -89,57 +89,55 @@ router.post('/', auth, async(req: Request, res: Response, next: NextFunction) =>
     const session = await mongoose.startSession();
 
     try {
-        session.startTransaction();
-        /// BUG! 
-        // This always returns the start of the current week. Needs to return the start of the week for a given Date.
-        const startOfWeek = await getStartOfWeek();
+        const booking = await session.withTransaction(async() => {
+            const startOfWeek = await getStartOfWeek(normalizedBookingDate);
+            /**
+             * 2 Step Concurrency Guard
+             * Step 1: Check if weeklyCounter Doc exists. If not create it.
+             * Step 2: Increment counter.
+            */
+            
+            await WeeklyBookingCount.findOneAndUpdate({
+                studentId : id,
+                weekStart: startOfWeek
+            }, 
+            {
+                $setOnInsert: {weeklyCount: 0}
+            },
+            {
+                session, upsert: true
+            },
+            );
 
-        /**
-         * Concurrency Guard
-         * Spilt in two steps to prevent triggering Mongo Duplicate Key Error on counter > 3  
-        */
-        
-        // Step 1: Check if weeklyCounter Doc exists. If not create it. 
-        await WeeklyBookingCount.findOneAndUpdate({
-            studentId : id,
-            weekStart: startOfWeek
-        }, 
-        {
-            $setOnInsert: {weeklyCount: 0}
-        },
-        {
-            session, returnDocument: "after", upsert: true
-        },
-        );
+            let weeklyBookingDoc: IWeeklyBookingCount | null = await WeeklyBookingCount.findOneAndUpdate({
+                studentId : id,
+                weekStart: startOfWeek,
+                weeklyCount: {$lt: 3}}, 
+                {$inc: {
+                        weeklyCount: 1
+                }},
+                {session, returnDocument: "after"},
+            );
 
-        // Step 2: Increment counter.
-        let weeklyBookingDoc: IWeeklyBookingCount | null = await WeeklyBookingCount.findOneAndUpdate({
-            studentId : id,
-            weekStart: startOfWeek,
-            weeklyCount: {$lt: 3}}, 
-            {$inc: {
-                    weeklyCount: 1
-            }},
-            {session, returnDocument: "after"},
-        );
+            if(weeklyBookingDoc === null) {
+                throw new WeeklyCapReachedError();
+            }
 
-        if(weeklyBookingDoc === null) {
-            await session.abortTransaction();
-            return res.status(409).json({error: "Weekly Booking Cap Reached"});
-        }
+            const [created] = await Booking.create([{
+                student: id,
+                date: normalizedBookingDate,
+                slotIndex: req.body.slotIndex
+            }], {session});
 
-        const [booking] = await Booking.create([{
-            student: id,
-            date: normalizedBookingDate,
-            slotIndex: req.body.slotIndex
-        }], {session});
-
-        await session.commitTransaction();
+            return created;
+        });
 
         return res.status(200).json({data: booking});
 
     } catch(err) {
-        await session.abortTransaction();
+        if (err instanceof WeeklyCapReachedError) {
+            return res.status(409).json({ error: "Weekly Booking Cap Reached" });
+        }
         next(err);
     } finally {
         await session.endSession();
