@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1791811732546" clover="3.2.0">
-  <project timestamp="1791811732546" name="All files">
+<coverage generated="1791811826941" clover="3.2.0">
+  <project timestamp="1791811826942" name="All files">
     <metrics statements="228" coveredstatements="223" conditionals="64" coveredconditionals="62" methods="27" coveredmethods="25" elements="319" coveredelements="310" complexity="0" loc="228" ncloc="228" packages="8" files="12" classes="12"/>
     <package name="src">
       <metrics statements="27" coveredstatements="23" conditionals="6" coveredconditionals="4" methods="4" coveredmethods="2"/>
@@ -230,19 +230,19 @@
         <line num="22" count="29" type="stmt"/>
         <line num="27" count="29" type="stmt"/>
         <line num="32" count="6" type="stmt"/>
-        <line num="34" count="55" type="stmt"/>
-        <line num="38" count="55" type="cond" truecount="2" falsecount="0"/>
-        <line num="40" count="55" type="stmt"/>
-        <line num="41" count="55" type="stmt"/>
-        <line num="43" count="55" type="stmt"/>
+        <line num="34" count="54" type="stmt"/>
+        <line num="38" count="54" type="cond" truecount="2" falsecount="0"/>
+        <line num="40" count="54" type="stmt"/>
+        <line num="41" count="54" type="stmt"/>
+        <line num="43" count="54" type="stmt"/>
         <line num="46" count="6" type="stmt"/>
         <line num="47" count="8" type="stmt"/>
         <line num="48" count="8" type="stmt"/>
         <line num="50" count="8" type="stmt"/>
         <line num="53" count="6" type="stmt"/>
-        <line num="55" count="55" type="stmt"/>
-        <line num="56" count="55" type="stmt"/>
-        <line num="58" count="55" type="stmt"/>
+        <line num="55" count="54" type="stmt"/>
+        <line num="56" count="54" type="stmt"/>
+        <line num="58" count="54" type="stmt"/>
         <line num="61" count="6" type="stmt"/>
         <line num="62" count="12" type="stmt"/>
         <line num="64" count="12" type="cond" truecount="2" falsecount="0"/>
@@ -258,7 +258,7 @@
         <line num="83" count="4" type="stmt"/>
         <line num="86" count="6" type="stmt"/>
         <line num="92" count="29" type="stmt"/>
-        <line num="93" count="55" type="stmt"/>
+        <line num="93" count="54" type="stmt"/>
         <line num="94" count="8" type="stmt"/>
         <line num="95" count="12" type="stmt"/>
         <line num="96" count="10" type="stmt"/>
@@ -284,10 +284,10 @@
       <file name="utils.ts" path="/Users/home/Desktop/portfolio-projects/session-booker/src/utils/utils.ts">
         <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
         <line num="1" count="7" type="stmt"/>
-        <line num="2" count="135" type="stmt"/>
-        <line num="3" count="135" type="stmt"/>
-        <line num="4" count="135" type="stmt"/>
-        <line num="7" count="94" type="stmt"/>
+        <line num="2" count="134" type="stmt"/>
+        <line num="3" count="134" type="stmt"/>
+        <line num="4" count="134" type="stmt"/>
+        <line num="7" count="93" type="stmt"/>
       </file>
     </package>
   </project>

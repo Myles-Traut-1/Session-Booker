@@ -363,7 +363,6 @@ describe("/api/booking", () => {
             );
 
             const statuses = responses.map((response) => response.status);
-            console.log(statuses);
 
             expect(statuses.filter((s) => s === 200)).toHaveLength(1);
             expect(statuses.filter((s) => s === 409)).toHaveLength(6)
@@ -389,7 +388,6 @@ describe("/api/booking", () => {
             );
 
             const statuses = responses.map((response) => response.status);
-            console.log(statuses);
 
             expect(statuses.filter((s) => s === 200)).toHaveLength(3);
             expect(statuses.filter((s) => s === 409)).toHaveLength(4)
