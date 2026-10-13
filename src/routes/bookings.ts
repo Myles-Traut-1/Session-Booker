@@ -1,21 +1,30 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import mongoose from "mongoose";
 
-import { Booking, type IBooking } from "../models/bookings";
+import { Booking } from "../models/bookings";
 import { WeeklyBookingCount, type IWeeklyBookingCount } from "../models/booking-count";
 import { auth, admin } from "../middleware/auth";
 
 import { normalizeDateToMidnightUTC } from "../utils/utils"
-import { validateBookingRequest, getStartOfWeek, getEndOfWeek, parseQueryPageParams,  parseQueryScope } 
-    from "../services/booking-service";
+import { 
+    validateBookingRequest, 
+    validateUpdateBookingRequest, 
+    getStartOfWeek, 
+    getEndOfWeek, 
+    parseQueryPageParams,  
+    parseQueryScope 
+} from "../services/booking-service";
 
 import { AuthResponse } from "../types";
 
 const router = express.Router();
 
+/** -------- CONSTANTS -------- */
 const BOOKINGS_PAGE_SIZE = 20; 
 
+/** -------- CUSTOM ERROR CLASS -------- */
 class WeeklyCapReachedError extends Error {}
+class BookingNotFound extends Error {}
 
 /** -------- GET -------- */
 
@@ -86,11 +95,12 @@ router.post('/', auth, async(req: Request, res: Response, next: NextFunction) =>
         return res.status(400).json({error: "No Bookings on Weekends"});
     }
 
+    const startOfWeek = await getStartOfWeek(normalizedBookingDate);
+
     const session = await mongoose.startSession();
 
     try {
         const booking = await session.withTransaction(async() => {
-            const startOfWeek = await getStartOfWeek(normalizedBookingDate);
             /**
              * 2 Step Concurrency Guard
              * Step 1: Check if weeklyCounter Doc exists. If not create it.
@@ -105,11 +115,12 @@ router.post('/', auth, async(req: Request, res: Response, next: NextFunction) =>
                 $setOnInsert: {weeklyCount: 0}
             },
             {
-                session, upsert: true
+                session, 
+                upsert: true
             },
             );
 
-            let weeklyBookingDoc: IWeeklyBookingCount | null = await WeeklyBookingCount.findOneAndUpdate({
+            const weeklyBookingDoc: IWeeklyBookingCount | null = await WeeklyBookingCount.findOneAndUpdate({
                 studentId : id,
                 weekStart: startOfWeek,
                 weeklyCount: {$lt: 3}}, 
@@ -141,6 +152,47 @@ router.post('/', auth, async(req: Request, res: Response, next: NextFunction) =>
         next(err);
     } finally {
         await session.endSession();
+    }
+});
+
+/** -------- PUT -------- */
+router.put("/:id", auth, async(req: Request, res: Response, next: NextFunction) => {
+    if(!mongoose.Types.ObjectId.isValid(req.params.id as string)) {
+        return res.status(400).json({error: "Invalid Id"});
+    }
+
+    const { error } = validateUpdateBookingRequest(req.body);
+    if(error) {
+        return res.status(400).json({error: error.details[0].message});
+    }
+
+    const studentId = (req.user as AuthResponse)._id;
+
+    const normalizedCurrentBookingDate = normalizeDateToMidnightUTC(req.body.currentDate);
+    const normalizedUpdatedBookingDate = normalizeDateToMidnightUTC(req.body.newDate);
+
+    if(normalizedCurrentBookingDate.getUTCDay() === 0 || normalizedCurrentBookingDate.getUTCDay() === 6) {
+        return res.status(400).json({error: "No Bookings on Weekends"});
+    }
+    /// HERE
+    try {
+        let currentBooking = await Booking.findOne({
+            _id: req.params.id,
+            student: studentId,
+            date: normalizedCurrentBookingDate
+        });
+
+        if(!currentBooking) {
+            throw new BookingNotFound();
+        }
+        
+        //res.json({data: updatedBooking});
+
+    } catch(err) {
+        if( err instanceof BookingNotFound) {
+            return res.status(404).json({ error: "Booking Not Found" });
+        }
+        next(err);
     }
 });
 

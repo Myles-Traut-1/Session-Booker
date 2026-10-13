@@ -13,7 +13,13 @@ interface IWeekBoundries {
 
 interface IBookingRequest {
     date: string,
-    time: string
+    slotIndex: string
+}
+
+interface IUpdateBookingRequest {
+    currentDate: string,
+    newDate: string,
+    slotIndex: string
 }
 
 /** ------ VALIDATION ------ */
@@ -25,6 +31,16 @@ const validateBookingRequest = (booking: IBookingRequest) => {
     })
 
     return schema.validate(booking);
+}
+
+const validateUpdateBookingRequest = (bookingUpdate: IUpdateBookingRequest) => {
+    const schema = Joi.object({
+        currentDate: Joi.string().isoDate().required(),
+        newDate: Joi.string().isoDate().required(),
+        slotIndex: Joi.number().min(0).max(8).required()
+    })
+
+    return schema.validate(bookingUpdate);
 }
 
 /** ------ HELPERS ------ */
@@ -60,7 +76,7 @@ const getWeekBoundries = async (): Promise<IWeekBoundries> => {
 
 const parseQueryPageParams = (query: unknown): number => {
     const defaultPage: number = 1;
-    
+
     if (typeof query !== "string") {
         return defaultPage;
     }
@@ -89,7 +105,8 @@ const parseQueryScope = (queryScope: unknown): string => {
 /** ------ EXPORTS ------ */
 
 export {
-    validateBookingRequest, 
+    validateBookingRequest,
+    validateUpdateBookingRequest,
     getStartOfWeek, 
     getEndOfWeek,
     parseQueryPageParams,

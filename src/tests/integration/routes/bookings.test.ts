@@ -373,7 +373,7 @@ describe("/api/booking", () => {
             bookingCount = await WeeklyBookingCount.findOne({studentId: newStudentId});
             expect((bookingCount as IWeeklyBookingCount).weeklyCount).toEqual(3);
         });
-        it("should enforce concurrency with successful retries", async() => {
+        it("should allow exactly 3 bookings under concurrent requests", async() => {
             let newStudentToken: string;
             let newStudentId: mongoose.Types.ObjectId;
 
@@ -390,10 +390,39 @@ describe("/api/booking", () => {
             const statuses = responses.map((response) => response.status);
 
             expect(statuses.filter((s) => s === 200)).toHaveLength(3);
-            expect(statuses.filter((s) => s === 409)).toHaveLength(4)
+            expect(statuses.filter((s) => s === 409)).toHaveLength(4);
 
-            let bookingCount = await WeeklyBookingCount.findOne({studentId: newStudentId});
-            expect((bookingCount as IWeeklyBookingCount).weeklyCount).toEqual(3);
+            let errors = responses.map((response) => response.body);
+            expect(errors.filter((err) => err.error === "Weekly Booking Cap Reached")).toHaveLength(4);
+
+            const weeklyBookingCount = await WeeklyBookingCount.findOne({studentId: newStudentId});
+            expect((weeklyBookingCount as IWeeklyBookingCount).weeklyCount).toEqual(3);
+
+            const documentCount = await WeeklyBookingCount.countDocuments({studentId: newStudentId});
+            expect(documentCount).toEqual(1);
+
+            const bookingDocumentCount = await Booking.countDocuments({student: newStudentId});
+            expect(bookingDocumentCount).toEqual(3);
+        });
+        it("should rollback changes if same slot is booked twice", async() => {
+            const responses = await Promise.all(
+                Array.from({ length: 2 }, () =>
+                    executeRequest(3, token)
+                )
+            );
+
+            const statuses = responses.map((response) => response.status);
+            console.log(statuses);
+            expect(statuses.filter((s) => s === 200)).toHaveLength(1);
+            expect(statuses.filter((s) => s === 409)).toHaveLength(1);
+
+            const loser = responses.find((response) => response.status === 409);
+            expect(loser).toBeDefined();
+            expect(loser?.body.error).toMatch(/just booked/i);
+
+            const bookingCount = await WeeklyBookingCount.findOne({studentId: userId});
+
+            expect((bookingCount as IWeeklyBookingCount).weeklyCount).toEqual(1);
         });
     });
 });
